@@ -1,16 +1,14 @@
-name: Run OPA Tests
-on: [push]
+name: conftest
+on: [pull_request]
 jobs:
-  Run-OPA-Tests:
+  conftest:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v3
-
-    - name: Setup OPA
-      uses: open-policy-agent/setup-opa@v2
-      with:
-        version: latest
-
-    - name: Run OPA Tests
-      run: conftest test tfplan.json
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: conftest
+        uses: YubicoLabs/action-conftest@v3
+        with:
+          files: some_deployment.yaml another_resource.yaml
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          gh-comment-url: ${{ github.event.pull_request.comments_url }}
