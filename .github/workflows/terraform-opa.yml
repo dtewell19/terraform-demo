@@ -58,9 +58,8 @@ jobs:
 
     - name: conftest
       uses: YubicoLabs/action-conftest@v3
-      working-directory: ${{ env.WORKING_DIR }}
       with:
-        files: tfplan.json
+        files: ${{ env.WORKING_DIR }}/tfplan.json
         gh-token: ${{ secrets.GITHUB_TOKEN }}
         gh-comment-url: ${{ github.event.pull_request.comments_url }}
     
