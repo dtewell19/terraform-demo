@@ -48,7 +48,7 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -input=false
     
-      - name: Run Terrascan
+    - name: Run Terrascan
       id: terrascan
       uses: tenable/terrascan-action@main
       with:
