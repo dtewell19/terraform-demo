@@ -56,12 +56,14 @@ jobs:
       run: terraform show -json tfplan.binary > tfplan.json
       working-directory: ${{ env.WORKING_DIR }}
 
-    - name: conftest
-      uses: YubicoLabs/action-conftest@v3
-      with:
-        files: ${{ env.WORKING_DIR }}/tfplan.json
-        gh-token: ${{ secrets.GITHUB_TOKEN }}
-        gh-comment-url: ${{ github.event.pull_request.comments_url }}
+    - name: Conftest - Install
+      run: |
+        wget -O - 'https://github.com/open-policy-agent/conftest/releases/download/v${{ env.CONFTEST_VERSION }}/conftest_${{ env.CONFTEST_VERSION }}_Linux_x86_64.tar.gz' | tar zxvf -
+        ./conftest --version
+
+    - name: Conftest - Run
+      run: |
+        ./conftest test tfplan.json
     
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
