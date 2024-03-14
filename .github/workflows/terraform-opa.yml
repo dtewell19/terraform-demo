@@ -48,6 +48,9 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -input=false
 
+    - name: Terraform Plan - Binary
+      run: terraform plan --out tfplan.binary
+      
     - name: Terraform Plan - Conftest
       run: terraform show -json tfplan.binary > tfplan.json
 
