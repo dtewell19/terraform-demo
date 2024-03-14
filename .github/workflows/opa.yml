@@ -13,4 +13,4 @@ jobs:
         version: latest
 
     - name: Run OPA Tests
-      run: opa eval --format pretty --data policy/ --input tfplan.json "data.main.deny" --fail-defined
+      run: conftest test tfplan.json
