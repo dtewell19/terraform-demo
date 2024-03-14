@@ -76,7 +76,7 @@ jobs:
     - name: Conftest - Run
       uses: YubicoLabs/action-conftest@v3
       with:
-        files: some_deployment.yaml another_resource.yaml
+        files: tfplan.json
         gh-token: ${{ secrets.GITHUB_TOKEN }}
         gh-comment-url: ${{ github.event.pull_request.comments_url }}
     
