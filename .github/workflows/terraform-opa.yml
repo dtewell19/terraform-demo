@@ -50,12 +50,15 @@ jobs:
 
     - name: Terraform Plan - Binary
       run: terraform plan --out tfplan.binary
+      working-directory: ${{ env.WORKING_DIR }}
       
     - name: Terraform Plan - Conftest
       run: terraform show -json tfplan.binary > tfplan.json
+      working-directory: ${{ env.WORKING_DIR }}
 
     - name: conftest
       uses: YubicoLabs/action-conftest@v3
+      working-directory: ${{ env.WORKING_DIR }}
       with:
         files: tfplan.json
         gh-token: ${{ secrets.GITHUB_TOKEN }}
