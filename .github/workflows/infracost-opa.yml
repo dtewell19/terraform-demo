@@ -77,6 +77,9 @@ jobs:
       id: evaluate_policies
       run: |
         opa eval --data ./policy/aws_cost.rego --input /tmp/infracost.json --format pretty "data.main.deny" > cost_policy_result.txt
+        if [[ -s cost_policy_result.txt ]]; then 
+          exit 1
+        fi
 
     - name: Add policy results to job summary
       if: failure()
