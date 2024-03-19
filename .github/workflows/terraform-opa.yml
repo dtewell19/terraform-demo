@@ -60,7 +60,7 @@ jobs:
 
     - name: Conftest - Run
       run: |
-        ./conftest test tfplan.json
+        ./conftest test plan.json
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
