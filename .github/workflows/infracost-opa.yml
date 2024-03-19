@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  terraform:
+  infracost-opa:
     runs-on: ubuntu-latest
 
     steps:
@@ -49,14 +49,35 @@ jobs:
         chmod 755 ./opa
         sudo mv opa /usr/local/bin/
     
-    - name: Generate Infracost JSON Output
-      run: infracost breakdown --path . --format json --out-file infracost_output.json
+        - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: '${{ github.event.pull_request.base.ref }}'
+
+      # Generate Infracost JSON file as the baseline.
+    - name: Generate Infracost cost estimate baseline
+      run: |
+        infracost breakdown --path=. \
+                            --format=json \
+                            --out-file=/tmp/infracost-base.json
+
+    # Checkout the current PR branch so we can create a diff.
+    - name: Checkout PR branch
+      uses: actions/checkout@v4
+
+    # Generate an Infracost diff and save it to a JSON file.
+    - name: Generate Infracost diff
+      run: |
+        infracost diff --path=. \
+                        --format=json \
+                        --compare-to=/tmp/infracost-base.json \
+                        --out-file=/tmp/infracost.json
 
     - name: Evaluate Rego Policies
       id: evaluate_policies
       run: |
-        opa eval --data ./policies/aws_cost.rego --input infracost_output.json --format pretty "data.main.deny" > cost_policy_result.txt
-        if [[ -s tags_policy_result.txt || -s cost_policy_result.txt ]]; then 
+        opa eval --data ./policy/aws_cost.rego --input /tmp/infracost.json --format pretty "data.main.deny" > cost_policy_result.txt
+        if [[ -s cost_policy_result.txt ]]; then 
           exit 1
         fi
 
