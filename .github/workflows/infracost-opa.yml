@@ -49,12 +49,12 @@ jobs:
         chmod 755 ./opa
         sudo mv opa /usr/local/bin/
     
-        - name: Checkout base branch
-        uses: actions/checkout@v4
-        with:
-          ref: '${{ github.event.pull_request.base.ref }}'
+    - name: Checkout base branch
+      uses: actions/checkout@v4
+      with:
+        ref: '${{ github.event.pull_request.base.ref }}'
 
-      # Generate Infracost JSON file as the baseline.
+    # Generate Infracost JSON file as the baseline.
     - name: Generate Infracost cost estimate baseline
       run: |
         infracost breakdown --path=. \
