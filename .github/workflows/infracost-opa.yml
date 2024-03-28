@@ -1,0 +1,96 @@
+name: Infracost - OPA
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  infracost-opa:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Generate Terraform Plan JSON Output
+      run: |
+        terraform plan -out=tfplan.binary
+        terraform show -json tfplan.binary | grep -v "::debug::" | tail -n +2 > plan.json
+
+    - name: Setup Infracost
+      uses: infracost/actions/setup@v2
+        # See https://github.com/infracost/actions/tree/master/setup for other inputs
+        # If you can't use this action, see Docker images in https://infracost.io/cicd
+      with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+    - name: Install OPA
+      run: |
+        curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
+        chmod 755 ./opa
+        sudo mv opa /usr/local/bin/
+    
+    - name: Checkout base branch
+      uses: actions/checkout@v4
+      with:
+        ref: '${{ github.event.pull_request.base.ref }}'
+
+    # Generate Infracost JSON file as the baseline.
+    - name: Generate Infracost cost estimate baseline
+      run: |
+        infracost breakdown --path=. \
+                            --format=json \
+                            --out-file=/tmp/infracost-base.json
+
+    # Checkout the current PR branch so we can create a diff.
+    - name: Checkout PR branch
+      uses: actions/checkout@v4
+
+    # Generate an Infracost diff and save it to a JSON file.
+    - name: Generate Infracost diff
+      run: |
+        infracost diff --path=. \
+                        --format=json \
+                        --compare-to=/tmp/infracost-base.json \
+                        --out-file=/tmp/infracost.json
+
+    - name: Evaluate Rego Policies
+      id: evaluate_policies
+      run: |
+        opa eval --data ./policy/aws_cost.rego --input /tmp/infracost.json --format pretty "data.main.deny" > cost_policy_result.txt
+        if [[ -s cost_policy_result.txt ]]; then 
+          exit 1
+        fi
+
+    - name: Add policy results to job summary
+      if: failure()
+      run: |
+        if [[ -s cost_policy_result.txt ]]; then
+          echo "Cost policy violations:" >> $GITHUB_STEP_SUMMARY
+          cat cost_policy_result.txt >> $GITHUB_STEP_SUMMARY
+        fi
+
+
+
+      
+
+     
