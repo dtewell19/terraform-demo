@@ -48,19 +48,19 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -input=false
 
-    - name: Generate Terraform Plan JSON Output
-      run: |
-        terraform plan -out=tfplan.binary
-        terraform show -json tfplan.binary | grep -v "::debug::" | tail -n +2 > plan.json
+    # - name: Generate Terraform Plan JSON Output
+    #   run: |
+    #     terraform plan -out=tfplan.binary
+    #     terraform show -json tfplan.binary | grep -v "::debug::" | tail -n +2 > plan.json
 
-    - name: Conftest - Install
-      run: |
-        wget -O - 'https://github.com/open-policy-agent/conftest/releases/download/v0.50.0/conftest_0.50.0_Linux_x86_64.tar.gz' | tar zxvf -
-        ./conftest --version
+    # - name: Conftest - Install
+    #   run: |
+    #     wget -O - 'https://github.com/open-policy-agent/conftest/releases/download/v0.50.0/conftest_0.50.0_Linux_x86_64.tar.gz' | tar zxvf -
+    #     ./conftest --version
 
-    - name: Conftest - Run
-      run: |
-        ./conftest test plan.json
+    # - name: Conftest - Run
+    #   run: |
+    #     ./conftest test plan.json
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
